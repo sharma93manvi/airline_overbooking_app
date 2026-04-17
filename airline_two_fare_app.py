@@ -6,7 +6,7 @@ import plotly.express as px
 
 st.set_page_config(
     page_title="Airline Revenue Management Simulator",
-    page_icon="✈️",
+    page_icon=None,
     layout="wide",
 )
 
@@ -20,7 +20,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.title("✈️ Airline Revenue Management Simulator")
+st.title("Airline Revenue Management Simulator")
 st.markdown(
     "Optimize **total tickets to sell** and the **leisure fare booking limit** "
     "to maximize expected profit, balancing overbooking risk against empty seats "
@@ -29,14 +29,14 @@ st.markdown(
 st.markdown("---")
 
 # ── Sidebar ────────────────────────────────────────────────────────────────────
-st.sidebar.header("⚙️ Flight Parameters")
+st.sidebar.header("Flight Parameters")
 
 total_seats = st.sidebar.number_input(
     "Aircraft Capacity (seats)", min_value=50, max_value=500, value=150, step=1,
 )
 
 st.sidebar.markdown("---")
-st.sidebar.subheader("� F1 — Business Fare")
+st.sidebar.subheader("F1 — Business Fare")
 st.sidebar.caption("Sold from 2 weeks before departure until flight departure")
 f1_price = st.sidebar.number_input("F1 Ticket Price ($)", 100, 10000, 1500, 50)
 f1_demand_mean = st.sidebar.number_input("F1 Demand — Mean", 1, 200, 20, 1)
@@ -45,7 +45,7 @@ f1_noshow_pct = st.sidebar.slider("F1 No-Show Probability (%)", 0.0, 50.0, 15.0,
 st.sidebar.caption("Business no-shows receive a full refund (airline loses that revenue).")
 
 st.sidebar.markdown("---")
-st.sidebar.subheader("💰 F2 — Leisure Fare")
+st.sidebar.subheader("F2 — Leisure Fare")
 st.sidebar.caption("Sold up until 2 weeks before departure")
 f2_price = st.sidebar.number_input("F2 Ticket Price ($)", 50, 5000, 500, 50)
 f2_demand_mean = st.sidebar.number_input("F2 Demand — Mean", 10, 500, 200, 5)
@@ -54,7 +54,7 @@ f2_noshow_pct = st.sidebar.slider("F2 No-Show Probability (%)", 0.0, 50.0, 5.0, 
 st.sidebar.caption("Leisure no-shows do NOT receive a refund (airline keeps the revenue).")
 
 st.sidebar.markdown("---")
-st.sidebar.subheader("🤝 Denied Boarding")
+st.sidebar.subheader("Denied Boarding")
 volunteer_prob_pct = st.sidebar.slider(
     "Volunteer Probability per Leisure Passenger (%)", 0.0, 20.0, 1.5, 0.1,
     help="Each leisure passenger who shows up has this chance of volunteering to give up their seat.",
@@ -69,12 +69,12 @@ invol_cost = st.sidebar.number_input(
 )
 
 st.sidebar.markdown("---")
-st.sidebar.subheader("🔧 Simulation Settings")
+st.sidebar.subheader("Simulation Settings")
 n_sims = st.sidebar.selectbox("Monte Carlo Iterations", [10_000, 50_000, 100_000], index=0)
 random_seed = st.sidebar.number_input("Random Seed", min_value=0, max_value=999999, value=42, step=1)
 
 st.sidebar.markdown("---")
-st.sidebar.subheader("🔍 Search Range")
+st.sidebar.subheader("Search Range")
 max_tickets_low = st.sidebar.number_input(
     "Min Total Tickets to Sell", total_seats, total_seats + 100, total_seats, 1,
 )
@@ -228,7 +228,7 @@ else:
 gain = opt["mean_profit"] - baseline_profit
 
 # ── KPI Cards ──────────────────────────────────────────────────────────────────
-st.subheader("🎯 Optimal Strategy")
+st.subheader("Optimal Strategy")
 k1, k2, k3, k4 = st.columns(4)
 k1.metric("Total Tickets to Sell", f"{int(opt['total_tickets'])}")
 k2.metric("F1 (Business) Reservation", f"{int(opt['f1_reserved'])} seats")
@@ -246,11 +246,11 @@ st.markdown("---")
 
 # ── Tabs ───────────────────────────────────────────────────────────────────────
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
-    "📈 Profit Heatmap",
-    "📊 Profit Curves",
-    "⚖️ Overbooking & Volunteers",
-    "🎯 Profit Distribution",
-    "📋 Full Results Table",
+    "Profit Heatmap",
+    "Profit Curves",
+    "Overbooking & Volunteers",
+    "Profit Distribution",
+    "Full Results Table",
 ])
 
 # --- Tab 1: Heatmap ---
@@ -514,7 +514,7 @@ with tab5:
 st.markdown("---")
 
 # ── How It Works ───────────────────────────────────────────────────────────────
-with st.expander("ℹ️ How This Model Works"):
+with st.expander("How This Model Works"):
     st.markdown(f"""
 **Two Decision Variables:**
 1. **Total tickets to sell** — can exceed {total_seats} seats (overbooking)
