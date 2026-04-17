@@ -218,15 +218,6 @@ with st.spinner("Simulating all combinations of total tickets and reservation le
 opt_idx = df["mean_profit"].idxmax()
 opt = df.loc[opt_idx]
 
-baseline_row = df.loc[
-    (df["total_tickets"] == total_seats) & (df["f1_reserved"] == reservation_low)
-]
-if not baseline_row.empty:
-    baseline_profit = baseline_row["mean_profit"].values[0]
-else:
-    baseline_profit = df["mean_profit"].min()
-gain = opt["mean_profit"] - baseline_profit
-
 # ── Single source-of-truth simulation at optimal ───────────────────────────────
 @st.cache_data(show_spinner=False)
 def get_optimal_dist(
@@ -258,6 +249,13 @@ dist, dist_vol, dist_invol, dist_excess = get_optimal_dist(
     f1_demand_mean, f1_demand_std, f2_demand_mean, f2_demand_std,
     volunteer_prob, vol_voucher, invol_cost, n_sims, random_seed,
 )
+
+# baseline: no overbooking (total_tickets = total_seats), min F1 reservation
+baseline_row = df.loc[
+    (df["total_tickets"] == total_seats) & (df["f1_reserved"] == reservation_low)
+]
+baseline_profit = baseline_row["mean_profit"].values[0] if not baseline_row.empty else df["mean_profit"].min()
+gain = np.mean(dist) - baseline_profit
 
 # ── KPI Cards ──────────────────────────────────────────────────────────────────
 st.subheader("Optimal Strategy")
