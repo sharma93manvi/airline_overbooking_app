@@ -227,20 +227,51 @@ else:
     baseline_profit = df["mean_profit"].min()
 gain = opt["mean_profit"] - baseline_profit
 
+# ── Single source-of-truth simulation at optimal ───────────────────────────────
+@st.cache_data(show_spinner=False)
+def get_optimal_dist(
+    total_seats, total_tickets, f1_reserved,
+    f1_price, f2_price, f1_noshow, f2_noshow,
+    f1_demand_mean, f1_demand_std, f2_demand_mean, f2_demand_std,
+    volunteer_prob, vol_voucher, invol_cost, n_sims, random_seed,
+):
+    rng = np.random.default_rng(random_seed)
+    bl_f2 = total_tickets - f1_reserved
+    f2_demand = np.clip(np.round(rng.normal(f2_demand_mean, f2_demand_std, n_sims)).astype(int), 0, None)
+    f1_demand = np.clip(np.round(rng.normal(f1_demand_mean, f1_demand_std, n_sims)).astype(int), 0, None)
+    f2_sold = np.minimum(f2_demand, bl_f2)
+    f1_sold = np.minimum(f1_demand, f1_reserved)
+    f2_show = rng.binomial(f2_sold, 1.0 - f2_noshow)
+    f1_show = rng.binomial(f1_sold, 1.0 - f1_noshow)
+    f1_noshow_ct = f1_sold - f1_show
+    revenue = f2_price * f2_sold + f1_price * (f1_sold - f1_noshow_ct)
+    total_show = f1_show + f2_show
+    excess = np.maximum(0, total_show - total_seats)
+    volunteers = np.minimum(rng.binomial(f2_show, volunteer_prob), excess)
+    involuntary = np.maximum(0, excess - volunteers)
+    profit = revenue - vol_voucher * volunteers - invol_cost * involuntary
+    return profit, volunteers, involuntary, excess
+
+dist, dist_vol, dist_invol, dist_excess = get_optimal_dist(
+    total_seats, int(opt["total_tickets"]), int(opt["f1_reserved"]),
+    f1_price, f2_price, f1_noshow, f2_noshow,
+    f1_demand_mean, f1_demand_std, f2_demand_mean, f2_demand_std,
+    volunteer_prob, vol_voucher, invol_cost, n_sims, random_seed,
+)
+
 # ── KPI Cards ──────────────────────────────────────────────────────────────────
 st.subheader("Optimal Strategy")
 k1, k2, k3, k4 = st.columns(4)
 k1.metric("Total Tickets to Sell", f"{int(opt['total_tickets'])}")
 k2.metric("F1 (Business) Reservation", f"{int(opt['f1_reserved'])} seats")
 k3.metric("F2 (Leisure) Booking Limit", f"{int(opt['booking_limit_f2'])} tickets")
-k4.metric("Expected Profit", f"${opt['mean_profit']:,.0f}", f"+${gain:,.0f} vs. baseline")
+k4.metric("Expected Profit", f"${np.mean(dist):,.0f}", f"+${gain:,.0f} vs. baseline")
 
 k5, k6, k7, k8 = st.columns(4)
-k5.metric("Avg. Volunteers", f"{opt['mean_volunteers']:.2f}")
-k5_help = "Leisure passengers who voluntarily give up their seat"
-k6.metric("Avg. Involuntary Denied", f"{opt['mean_involuntary']:.2f}")
-k7.metric("Prob. of Oversold Flight", f"{opt['prob_oversold']*100:.1f}%")
-k8.metric("Prob. of Involuntary Denial", f"{opt['prob_involuntary']*100:.1f}%")
+k5.metric("Avg. Volunteers", f"{np.mean(dist_vol):.2f}")
+k6.metric("Avg. Involuntary Denied", f"{np.mean(dist_invol):.2f}")
+k7.metric("Prob. of Oversold Flight", f"{(dist_excess > 0).mean()*100:.1f}%")
+k8.metric("Prob. of Involuntary Denial", f"{(dist_invol > 0).mean()*100:.1f}%")
 
 st.markdown("---")
 
@@ -413,38 +444,6 @@ with tab3:
 
 # --- Tab 4: Profit Distribution at Optimal ---
 with tab4:
-    @st.cache_data(show_spinner=False)
-    def get_optimal_dist(
-        total_seats, total_tickets, f1_reserved,
-        f1_price, f2_price, f1_noshow, f2_noshow,
-        f1_demand_mean, f1_demand_std, f2_demand_mean, f2_demand_std,
-        volunteer_prob, vol_voucher, invol_cost, n_sims, random_seed,
-    ):
-        rng = np.random.default_rng(random_seed)
-        bl_f2 = total_tickets - f1_reserved
-
-        f2_demand = np.clip(np.round(rng.normal(f2_demand_mean, f2_demand_std, n_sims)).astype(int), 0, None)
-        f1_demand = np.clip(np.round(rng.normal(f1_demand_mean, f1_demand_std, n_sims)).astype(int), 0, None)
-        f2_sold = np.minimum(f2_demand, bl_f2)
-        f1_sold = np.minimum(f1_demand, f1_reserved)
-        f2_show = rng.binomial(f2_sold, 1.0 - f2_noshow)
-        f1_show = rng.binomial(f1_sold, 1.0 - f1_noshow)
-        f1_noshow_ct = f1_sold - f1_show
-
-        revenue = f2_price * f2_sold + f1_price * (f1_sold - f1_noshow_ct)
-        total_show = f1_show + f2_show
-        excess = np.maximum(0, total_show - total_seats)
-        volunteers = np.minimum(rng.binomial(f2_show, volunteer_prob), excess)
-        involuntary = np.maximum(0, excess - volunteers)
-        profit = revenue - vol_voucher * volunteers - invol_cost * involuntary
-        return profit, volunteers, involuntary, excess
-
-    dist, dist_vol, dist_invol, dist_excess = get_optimal_dist(
-        total_seats, int(opt["total_tickets"]), int(opt["f1_reserved"]),
-        f1_price, f2_price, f1_noshow, f2_noshow,
-        f1_demand_mean, f1_demand_std, f2_demand_mean, f2_demand_std,
-        volunteer_prob, vol_voucher, invol_cost, n_sims, random_seed,
-    )
 
     col_h, col_s = st.columns([2, 1])
     with col_h:
