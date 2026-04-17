@@ -420,7 +420,7 @@ with tab4:
         f1_demand_mean, f1_demand_std, f2_demand_mean, f2_demand_std,
         volunteer_prob, vol_voucher, invol_cost, n_sims, random_seed,
     ):
-        rng = np.random.default_rng(random_seed + 999)
+        rng = np.random.default_rng(random_seed)
         bl_f2 = total_tickets - f1_reserved
 
         f2_demand = np.clip(np.round(rng.normal(f2_demand_mean, f2_demand_std, n_sims)).astype(int), 0, None)
