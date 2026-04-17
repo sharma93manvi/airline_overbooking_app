@@ -266,8 +266,8 @@ k3.metric("F2 (Leisure) Booking Limit", f"{int(opt['booking_limit_f2'])} tickets
 k4.metric("Expected Profit", f"${np.mean(dist):,.0f}", f"+${gain:,.0f} vs. baseline")
 
 k5, k6, k7, k8 = st.columns(4)
-k5.metric("Avg. Volunteers", f"{np.mean(dist_vol):.2f}")
-k6.metric("Avg. Involuntary Denied", f"{np.mean(dist_invol):.2f}")
+k5.metric("Avg. Volunteers", f"{np.mean(dist_vol):.3f}")
+k6.metric("Avg. Involuntary Denied", f"{np.mean(dist_invol):.3f}")
 k7.metric("Prob. of Oversold Flight", f"{(dist_excess > 0).mean()*100:.1f}%")
 k8.metric("Prob. of Involuntary Denial", f"{(dist_invol > 0).mean()*100:.1f}%")
 
@@ -474,8 +474,8 @@ with tab4:
             "5th Percentile": f"${np.percentile(dist, 5):,.0f}",
             "Median": f"${np.median(dist):,.0f}",
             "95th Percentile": f"${np.percentile(dist, 95):,.0f}",
-            "Avg. Volunteers": f"{np.mean(dist_vol):.2f}",
-            "Avg. Involuntary": f"{np.mean(dist_invol):.2f}",
+            "Avg. Volunteers": f"{np.mean(dist_vol):.3f}",
+            "Avg. Involuntary": f"{np.mean(dist_invol):.3f}",
             "Prob. Oversold": f"{(dist_excess > 0).mean()*100:.1f}%",
         }
         for label, val in summary.items():
